@@ -1,0 +1,19 @@
+---
+dependencies: [sysctl]
+
+galaxy_info:
+  role_name: docker
+  author: ronnyforberger
+  description: A role to deploy docker
+  company: ""
+  license: "license (BSD, MIT)"
+  min_ansible_version: 2.4
+  platforms:
+    - name: EL
+      versions:
+        - 7
+        - 8
+        - 9
+    - name: Debian
+      versions:
+        - all

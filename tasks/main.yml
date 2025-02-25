@@ -1,0 +1,103 @@
+---
+
+- name: install pkgs
+  ansible.builtin.apt:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+  when: ansible_os_family == "Debian"
+
+- name: Create keyrings directory
+  ansible.builtin.file:
+    path: "/etc/apt/keyrings"
+    state: directory
+  when: ansible_os_family == "Debian"
+
+- name: Import docker's apt key
+  ansible.builtin.apt_key:
+    keyring: "/etc/apt/keyrings/docker.gpg"
+    url: "https://download.docker.com/linux/debian/gpg"
+  when: ansible_os_family == "Debian"
+
+- name: Get DEB architecture
+  shell: dpkg --print-architecture
+  register: deb_architecture
+  when: ansible_os_family == "Debian"
+
+- name: Install docker's apt repository
+  ansible.builtin.apt_repository:
+    repo: "deb [arch={{ deb_architecture.stdout }} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable"
+    filename: "docker"
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: install pkgs
+  ansible.builtin.apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-compose-plugin
+  notify:
+    - dockerd
+  when: ansible_os_family == "Debian"
+
+- name: Enable dockerd service
+  ansible.builtin.service:
+    name: docker
+    enabled: yes
+  when: ansible_os_family == "Debian"
+
+######################################################################################
+
+- name: install pkgs
+  ansible.builtin.yum:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - curl
+      - gnupg
+      - dnf-plugins-core
+  when: ansible_os_family == "RedHat"
+
+- name: Install docker's yum repository
+  ansible.builtin.shell:
+    cmd: "dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo"
+  when: ansible_os_family == "RedHat"
+
+- name: install pkgs
+  ansible.builtin.yum:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-compose-plugin
+  notify:
+    - dockerd
+  when: ansible_os_family == "RedHat"
+
+- name: Enable and start dockerd service
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: yes
+  when: ansible_os_family == "RedHat"
+
+
+
+
+
+
